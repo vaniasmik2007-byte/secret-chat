@@ -2,23 +2,24 @@
 <html lang="uk">
 <head>
     <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Elite Color Chat</title>
+    <title>Elite Autonomous Chat</title>
     <style>
-        :root { --bg: #050505; --panel: #111; --text: #eee; }
+        :root { --bg: #050505; --panel: #111; --text: #eee; --primary: #00ff88; }
         body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
         .box { background: var(--panel); padding: 25px; border-radius: 20px; border: 1px solid #333; width: 350px; text-align: center; box-shadow: 0 10px 40px rgba(0,0,0,0.7); }
-        #chat-box { height: 350px; overflow-y: auto; text-align: left; margin-bottom: 15px; padding: 10px; border-bottom: 1px solid #222; background: rgba(0,0,0,0.2); border-radius: 10px; }
+        #chat-box { height: 350px; overflow-y: auto; text-align: left; margin-bottom: 15px; padding: 10px; background: rgba(0,0,0,0.2); border-radius: 10px; border-bottom: 1px solid #222; }
         input { width: 100%; padding: 12px; margin: 8px 0; border-radius: 10px; border: 1px solid #333; background: #000; color: #fff; box-sizing: border-box; outline: none; }
-        button { width: 100%; padding: 12px; border-radius: 10px; border: none; background: #00ff88; color: #000; font-weight: bold; cursor: pointer; transition: 0.2s; }
-        .msg { margin-bottom: 10px; padding: 8px; border-radius: 8px; background: rgba(255,255,255,0.03); }
-        .msg b { display: block; font-size: 0.8rem; margin-bottom: 3px; text-transform: uppercase; letter-spacing: 1px; }
-        .msg span { font-size: 1rem; color: #ccc; }
+        button { width: 100%; padding: 12px; border-radius: 10px; border: none; background: var(--primary); color: #000; font-weight: bold; cursor: pointer; transition: 0.2s; }
+        .msg { margin-bottom: 10px; padding: 8px; border-radius: 8px; background: rgba(255,255,255,0.03); border-left: 3px solid; }
+        .msg b { display: block; font-size: 0.8rem; margin-bottom: 3px; text-transform: uppercase; }
+        #status { font-size: 10px; color: #ff0055; margin-bottom: 10px; }
     </style>
 </head>
 <body>
 
     <div id="login-section" class="box">
-        <h2 style="margin-top:0;">🔒 ВХІД</h2>
+        <h2 style="margin-top:0;">🔒 ПРИВАТНИЙ ВХІД</h2>
+        <div id="status">Система готова ✅</div>
         <input type="text" id="user-nick" placeholder="Твій Нікнейм">
         <input type="password" id="pass-input" placeholder="Код 4269">
         <button onclick="unlock()">УВІЙТИ</button>
@@ -27,55 +28,57 @@
     <div id="chat-section" class="box" style="display: none; width: 450px;">
         <div id="chat-box"></div>
         <div style="display: flex; gap: 5px;">
-            <input type="text" id="msg-input" placeholder="Напиши щось...">
+            <input type="text" id="msg-input" placeholder="Напиши повідомлення...">
             <button onclick="send()" style="width: 60px;">🚀</button>
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net"></script>
+    <!-- Библиотека Gun.js встроена прямо сюда для обхода блокировок -->
+    <script src="https://cdnjs.cloudflare.com"></script>
 
     <script>
         let chat;
-        let myNick = "Анонім";
+        let myNick = "";
 
-        // Функція для генерації кольору з тексту
         function stringToColor(str) {
             let hash = 0;
             for (let i = 0; i < str.length; i++) {
                 hash = str.charCodeAt(i) + ((hash << 5) - hash);
             }
-            let color = '#';
-            for (let i = 0; i < 3; i++) {
-                let value = (hash >> (i * 8)) & 0xFF;
-                color += ('00' + value.toString(16)).substr(-2);
-            }
-            return color;
+            return `hsl(${Math.abs(hash % 360)}, 70%, 60%)`;
         }
 
         function unlock() {
             const nick = document.getElementById('user-nick').value.trim();
             const pass = document.getElementById('pass-input').value;
+            
             if (nick && pass === "4269") {
                 myNick = nick;
-                const gun = Gun(['https://gun-manhattan.herokuapp.com']);
-                chat = gun.get('ivan-secret-color-chat-2026');
+                // Используем несколько серверов-узлов для надежности
+                const gun = Gun([
+                    'https://gun-manhattan.herokuapp.com',
+                    'https://gun-us.herokuapp.com'
+                ]);
+                chat = gun.get('ivan-secret-final-v3');
 
                 document.getElementById('login-section').style.display = 'none';
                 document.getElementById('chat-section').style.display = 'block';
 
-                chat.map().once((data, id) => {
-                    if (data && data.text && data.sender) {
-                        renderMsg(data.text, data.sender);
+                chat.map().on((data, id) => {
+                    if (data && data.text && data.sender && !document.getElementById(id)) {
+                        renderMsg(data.text, data.sender, id);
                     }
                 });
-            } else { alert("Введи нік та вірний код!"); }
+            } else { alert("Введи нік та код 4269!"); }
         }
 
-        function renderMsg(text, sender) {
+        function renderMsg(text, sender, id) {
             const box = document.getElementById('chat-box');
             const color = stringToColor(sender);
             const div = document.createElement('div');
+            div.id = id;
             div.className = 'msg';
+            div.style.borderLeftColor = color;
             div.innerHTML = `<b style="color: ${color}">${sender}</b> <span>${text}</span>`;
             box.appendChild(div);
             box.scrollTop = box.scrollHeight;
@@ -86,7 +89,8 @@
             if (input.value.trim()) {
                 chat.set({ 
                     text: input.value.trim(),
-                    sender: myNick 
+                    sender: myNick,
+                    time: Date.now()
                 });
                 input.value = "";
             }
