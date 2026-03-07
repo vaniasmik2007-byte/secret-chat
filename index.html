@@ -2,7 +2,6 @@
 <html lang="uk">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Elite Private Chat</title>
     <style>
         :root { --primary: #ff0055; --secondary: #7000ff; --bg: #050505; }
@@ -17,13 +16,11 @@
 </head>
 <body>
     <div class="bg-blur"></div>
-
     <div id="login-section" class="container">
-        <h2>🔒 ПРИВАТНИЙ ВХІД</h2>
+        <h2>🔒 ВХІД</h2>
         <input type="password" id="pass-code" placeholder="Введіть код">
         <button class="main-btn" onclick="unlock()">УВІЙТИ</button>
     </div>
-
     <div id="chat-section" class="container" style="display: none; max-width: 550px;">
         <h3 id="status" style="color: #00ff88; font-size: 0.8rem; margin-bottom: 10px;">Online ✅</h3>
         <div id="chat-box"></div>
@@ -33,15 +30,11 @@
         </div>
     </div>
 
-    <!-- Библиотеки Firebase (Compat) -->
     <script src="https://www.gstatic.com"></script>
     <script src="https://www.gstatic.com"></script>
 
     <script>
-        // СЕКРЕТНИЙ КОД В САМОМУ ГОРІ
         var MY_SECRET = "4269";
-        var db;
-
         var firebaseConfig = {
             apiKey: "AIzaSyD03EYUJSS3zTbHgcZuoOWOMpHrhMMyAnM",
             authDomain: "mysecretchat-aed68.firebaseapp.com",
@@ -51,38 +44,25 @@
             appId: "1:1904541515416:web:7136a6692bd119f12fe2ed"
         };
 
-        // Запуск після завантаження всього
-        window.onload = function() {
-            if (typeof firebase !== 'undefined') {
-                firebase.initializeApp(firebaseConfig);
-                db = firebase.firestore();
-                console.log("Firebase initialized");
-            } else {
-                console.error("Firebase not loaded");
-            }
-        };
+        firebase.initializeApp(firebaseConfig);
+        var db = firebase.firestore();
 
         function unlock() {
-            var input = document.getElementById('pass-code').value;
-            if (input === MY_SECRET) {
+            if (document.getElementById('pass-code').value === MY_SECRET) {
                 document.getElementById('login-section').style.display = 'none';
                 document.getElementById('chat-section').style.display = 'block';
                 startChat();
-            } else {
-                alert("Невірний код!");
-            }
+            } else { alert("Невірний код!"); }
         }
 
         function startChat() {
-            if (!db) { alert("База ще не завантажилась, зачекай секунду"); return; }
             db.collection("messages").orderBy("timestamp", "asc").onSnapshot(function(snap) {
                 var box = document.getElementById('chat-box');
                 box.innerHTML = "";
                 snap.forEach(function(doc) {
-                    var m = doc.data();
                     var div = document.createElement('div');
                     div.className = 'msg';
-                    div.innerText = m.text;
+                    div.innerText = doc.data().text;
                     box.appendChild(div);
                 });
                 box.scrollTop = box.scrollHeight;
