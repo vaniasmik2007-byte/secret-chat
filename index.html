@@ -2,7 +2,7 @@
 <html lang="uk">
 <head>
     <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Elite Supabase Chat</title>
+    <title>Elite Private Chat</title>
     <style>
         :root { --primary: #00ff88; --bg: #050505; }
         body { background: var(--bg); color: white; font-family: 'Segoe UI', sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
@@ -25,20 +25,31 @@
         <div id="chat-box"></div>
         <div style="display:flex; gap:8px;">
             <input type="text" id="msg-input" placeholder="Повідомлення...">
-            <button onclick="send()" style="width:70px;">🚀</button>
+            <button onclick="sendMsg()" style="width:70px;">🚀</button>
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net"></script>
+    <!-- Завантажуємо бібліотеку Supabase через CDN -->
+    <script src="https://unpkg.com"></script>
+
     <script>
-        // ВСТАВ СВІЙ КЛЮЧ ТУТ:
         const SUPABASE_URL = 'https://cenlzbfoyeyykvuxwfof.supabase.co';
-        const SUPABASE_KEY = 'ВСТАВ_СЮДИ_СВІЙ_КЛЮЧ_ЯКИЙ_ТІЛЬКИ_ЩО_СКОПІЮВАВ';
+        const SUPABASE_KEY = 'sb_publishable_ooL5fspe-_GO8LKBFusdRg_MR1eozbJ';
         
-        const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        let client;
+
+        // Чекаємо завантаження сторінки
+        window.onload = function() {
+            try {
+                client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+            } catch (e) {
+                console.error("Система не завантажена");
+            }
+        };
 
         function unlock() {
-            if (document.getElementById('pass-code').value === "4269") {
+            const input = document.getElementById('pass-code').value;
+            if (input === "4269") {
                 document.getElementById('login-section').style.display = 'none';
                 document.getElementById('chat-section').style.display = 'block';
                 loadMsgs();
@@ -70,10 +81,10 @@
             box.scrollTop = box.scrollHeight;
         }
 
-        async function send() {
+        async function sendMsg() {
             const input = document.getElementById('msg-input');
             const val = input.value.trim();
-            if (!val) return;
+            if (!val || !client) return;
             await client.from('messages').insert();
             input.value = "";
         }
