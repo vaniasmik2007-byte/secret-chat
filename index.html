@@ -5,44 +5,44 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Elite Private Chat</title>
     <style>
-        :root { --primary: #ff0055; --secondary: #7000ff; --bg: #050505; --glass: rgba(255, 255, 255, 0.08); --border: rgba(255, 255, 255, 0.15); }
+        :root { --primary: #ff0055; --secondary: #7000ff; --bg: #050505; }
         body, html { margin: 0; padding: 0; height: 100%; font-family: 'Inter', sans-serif; background: var(--bg); color: white; display: flex; justify-content: center; align-items: center; overflow: hidden; }
-        .bg-blur { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: radial-gradient(circle at 10% 20%, #1a0033 0%, #000 100%); z-index: -1; }
-        .container { width: 95%; max-width: 500px; background: var(--glass); backdrop-filter: blur(30px); border: 1px solid var(--border); border-radius: 30px; padding: 30px; box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8); text-align: center; }
-        #chat-box { height: 450px; overflow-y: auto; margin-bottom: 20px; display: flex; flex-direction: column; gap: 15px; padding: 10px; scrollbar-width: thin; scrollbar-color: var(--primary) transparent; }
-        .msg-container { display: flex; flex-direction: column; align-items: flex-end; position: relative; }
-        .msg { background: linear-gradient(135deg, var(--secondary), var(--primary)); padding: 12px 18px; border-radius: 20px; border-bottom-right-radius: 5px; max-width: 85%; text-align: left; box-shadow: 0 4px 15px rgba(255, 0, 85, 0.2); }
-        .controls { display: flex; gap: 12px; }
-        input { width: 100%; background: rgba(0, 0, 0, 0.4); border: 1px solid var(--border); padding: 14px; border-radius: 15px; color: white; outline: none; }
-        .main-btn { background: linear-gradient(90deg, var(--secondary), var(--primary)); border: none; border-radius: 15px; color: white; font-weight: bold; padding: 12px 20px; cursor: pointer; transition: 0.3s; }
+        .bg-blur { position: fixed; width: 100%; height: 100%; background: radial-gradient(circle at 10% 20%, #1a0033 0%, #000 100%); z-index: -1; }
+        .container { width: 95%; max-width: 450px; background: rgba(255,255,255,0.08); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.1); border-radius: 30px; padding: 30px; box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8); text-align: center; }
+        #chat-box { height: 400px; overflow-y: auto; margin-bottom: 20px; display: flex; flex-direction: column; gap: 10px; padding: 10px; text-align: left; }
+        .msg { background: linear-gradient(135deg, var(--secondary), var(--primary)); padding: 12px 18px; border-radius: 18px; width: fit-content; max-width: 85%; align-self: flex-end; }
+        input { width: 100%; background: rgba(0, 0, 0, 0.4); border: 1px solid rgba(255,255,255,0.15); padding: 15px; border-radius: 15px; color: white; outline: none; margin-bottom: 10px; box-sizing: border-box; }
+        .main-btn { background: linear-gradient(90deg, var(--secondary), var(--primary)); border: none; border-radius: 15px; color: white; font-weight: bold; padding: 15px; cursor: pointer; width: 100%; transition: 0.3s; }
     </style>
 </head>
 <body>
     <div class="bg-blur"></div>
 
-    <!-- ВХІД -->
     <div id="login-section" class="container">
-        <h2 style="text-align:center;">🔒 ПРИВАТНИЙ ВХІД</h2>
+        <h2>🔒 ПРИВАТНИЙ ВХІД</h2>
         <input type="password" id="pass-code" placeholder="Введіть код">
-        <button class="main-btn" onclick="unlock()" style="width: 100%; margin-top: 15px;">УВІЙТИ</button>
+        <button class="main-btn" onclick="unlock()">УВІЙТИ</button>
     </div>
 
-    <!-- ЧАТ -->
-    <div id="chat-section" class="container" style="display: none;">
-        <h3 style="margin: 0 0 15px 0; color: var(--primary); text-align: center;">Elite Chat</h3>
+    <div id="chat-section" class="container" style="display: none; max-width: 550px;">
+        <h3 id="status" style="color: #00ff88; font-size: 0.8rem; margin-bottom: 10px;">Online ✅</h3>
         <div id="chat-box"></div>
-        <div class="controls">
+        <div style="display: flex; gap: 10px;">
             <input type="text" id="msg-input" placeholder="Повідомлення...">
-            <button class="main-btn" onclick="send()">🚀</button>
+            <button class="main-btn" onclick="send()" style="width: 70px;">🚀</button>
         </div>
     </div>
 
-    <!-- Надійне підключення Firebase (Compat версія) -->
+    <!-- Библиотеки Firebase (Compat) -->
     <script src="https://www.gstatic.com"></script>
     <script src="https://www.gstatic.com"></script>
 
     <script>
-        const firebaseConfig = {
+        // СЕКРЕТНИЙ КОД В САМОМУ ГОРІ
+        var MY_SECRET = "4269";
+        var db;
+
+        var firebaseConfig = {
             apiKey: "AIzaSyD03EYUJSS3zTbHgcZuoOWOMpHrhMMyAnM",
             authDomain: "mysecretchat-aed68.firebaseapp.com",
             projectId: "mysecretchat-aed68",
@@ -51,48 +51,53 @@
             appId: "1:1904541515416:web:7136a6692bd119f12fe2ed"
         };
 
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.firestore();
-        const SECRET = "4269";
+        // Запуск після завантаження всього
+        window.onload = function() {
+            if (typeof firebase !== 'undefined') {
+                firebase.initializeApp(firebaseConfig);
+                db = firebase.firestore();
+                console.log("Firebase initialized");
+            } else {
+                console.error("Firebase not loaded");
+            }
+        };
 
         function unlock() {
-            if (document.getElementById('pass-code').value === SECRET) {
+            var input = document.getElementById('pass-code').value;
+            if (input === MY_SECRET) {
                 document.getElementById('login-section').style.display = 'none';
                 document.getElementById('chat-section').style.display = 'block';
                 startChat();
-            } else { alert("Невірний код!"); }
+            } else {
+                alert("Невірний код!");
+            }
         }
 
         function startChat() {
-            db.collection("messages").orderBy("timestamp", "asc").onSnapshot((snap) => {
-                const box = document.getElementById('chat-box');
+            if (!db) { alert("База ще не завантажилась, зачекай секунду"); return; }
+            db.collection("messages").orderBy("timestamp", "asc").onSnapshot(function(snap) {
+                var box = document.getElementById('chat-box');
                 box.innerHTML = "";
-                snap.forEach(doc => {
-                    const m = doc.data();
-                    const div = document.createElement('div');
-                    div.className = 'msg-container';
-                    div.innerHTML = `<div class="msg">${m.text}</div>`;
+                snap.forEach(function(doc) {
+                    var m = doc.data();
+                    var div = document.createElement('div');
+                    div.className = 'msg';
+                    div.innerText = m.text;
                     box.appendChild(div);
                 });
                 box.scrollTop = box.scrollHeight;
             });
         }
 
-        async function send() {
-            const input = document.getElementById('msg-input');
-            const val = input.value.trim();
-            if (!val) return;
-            
-            await db.collection("messages").add({
-                text: val,
+        function send() {
+            var input = document.getElementById('msg-input');
+            if(!input.value.trim()) return;
+            db.collection("messages").add({
+                text: input.value,
                 timestamp: firebase.firestore.FieldValue.serverTimestamp()
             });
             input.value = "";
         }
-
-        // Відправка по Enter
-        document.getElementById('msg-input').onkeypress = (e) => { if(e.key === 'Enter') send(); };
-        document.getElementById('pass-code').onkeypress = (e) => { if(e.key === 'Enter') unlock(); };
     </script>
 </body>
 </html>
