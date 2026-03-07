@@ -1,60 +1,90 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-    <meta charset="UTF-8"><title>Final Test Chat</title>
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Global Elite Chat</title>
     <style>
         body { background: #050505; color: #00ff88; font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
-        .box { background: #111; padding: 30px; border-radius: 20px; border: 1px solid #333; text-align: center; width: 300px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        .box { background: #111; padding: 30px; border-radius: 20px; border: 1px solid #333; text-align: center; width: 350px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
         input { width: 100%; padding: 12px; margin: 10px 0; border-radius: 10px; border: 1px solid #444; background: #000; color: #fff; box-sizing: border-box; outline: none; }
         button { width: 100%; padding: 12px; border-radius: 10px; border: none; background: #00ff88; color: #000; font-weight: bold; cursor: pointer; transition: 0.2s; }
-        button:active { transform: scale(0.98); }
-        #chat-box { height: 200px; overflow-y: auto; text-align: left; margin-bottom: 10px; padding: 5px; border-bottom: 1px solid #333; font-size: 14px; }
+        #chat-box { height: 300px; overflow-y: auto; text-align: left; margin-bottom: 15px; padding: 10px; border-bottom: 1px solid #333; font-size: 14px; background: rgba(0,0,0,0.3); border-radius: 10px; }
+        .msg { margin-bottom: 8px; border-left: 2px solid #00ff88; padding-left: 8px; word-wrap: break-word; }
     </style>
 </head>
 <body>
 
     <div id="login-section" class="box">
-        <h2 style="margin-top:0;">🔒 ВХОД</h2>
+        <h2 style="margin-top:0;">🔒 ВХІД</h2>
         <input type="password" id="pass-input" placeholder="Код 4269">
         <button onclick="unlock()">ВОЙТИ</button>
     </div>
 
-    <div id="chat-section" class="box" style="display: none; width: 400px;">
+    <div id="chat-section" class="box" style="display: none; width: 450px;">
+        <div id="status" style="font-size: 10px; margin-bottom: 5px; color: gray;">Connecting...</div>
         <div id="chat-box"></div>
         <div style="display: flex; gap: 5px;">
-            <input type="text" id="msg-input" placeholder="Напиши что-то...">
+            <input type="text" id="msg-input" placeholder="Напиши друзям...">
             <button onclick="send()" style="width: 60px;">🚀</button>
         </div>
     </div>
 
+    <!-- ПІДКЛЮЧАЄМО GUN JS -->
+    <script src="https://cdn.jsdelivr.net"></script>
+
     <script>
+        let chat;
+
         function unlock() {
-            // Исправлено: теперь берем значение точно из того ID, который прописан выше
             const pass = document.getElementById('pass-input').value;
             if (pass === "4269") {
+                // Ініціалізуємо мережу
+                const gun = Gun([
+                    'https://gun-manhattan.herokuapp.com',
+                    'https://gun-us.herokuapp.com'
+                ]);
+                
+                // Твоя унікальна кімната (тільки для тих, хто має посилання)
+                chat = gun.get('secret-ivan-chat-2026-v1');
+
                 document.getElementById('login-section').style.display = 'none';
                 document.getElementById('chat-section').style.display = 'block';
-            } else { 
-                alert("Неверно! Попробуй 4269"); 
-            }
+                document.getElementById('status').innerText = "ONLINE ✅";
+                document.getElementById('status').style.color = "#00ff88";
+
+                // Слухаємо базу в реальному часі
+                chat.map().on((data, id) => {
+                    if (data && data.text && !document.getElementById(id)) {
+                        renderMsg(data.text, id);
+                    }
+                });
+            } else { alert("Невірно!"); }
+        }
+
+        function renderMsg(text, id) {
+            const box = document.getElementById('chat-box');
+            const div = document.createElement('div');
+            div.id = id;
+            div.className = 'msg';
+            div.innerText = text;
+            box.appendChild(div);
+            box.scrollTop = box.scrollHeight;
         }
 
         function send() {
             const input = document.getElementById('msg-input');
-            const box = document.getElementById('chat-box');
-            if (input.value.trim()) {
-                const div = document.createElement('div');
-                div.style.marginBottom = "5px";
-                div.innerText = "• " + input.value;
-                box.appendChild(div);
+            if (input.value.trim() && chat) {
+                chat.set({ text: input.value.trim() });
                 input.value = "";
-                box.scrollTop = box.scrollHeight;
             }
         }
-        
-        // Чтобы заходить по нажатию Enter
-        document.getElementById('pass-input').addEventListener('keypress', function (e) {
-            if (e.key === 'Enter') unlock();
+
+        // Запуск через Enter
+        document.addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') {
+                if (document.getElementById('login-section').style.display !== 'none') unlock();
+                else send();
+            }
         });
     </script>
 </body>
