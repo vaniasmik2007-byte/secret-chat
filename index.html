@@ -3,42 +3,42 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Elite Private Chat</title>
+    <title>Secret Elite Chat</title>
     <style>
         :root { --primary: #ff0055; --secondary: #7000ff; --bg: #050505; }
         body, html { margin: 0; padding: 0; height: 100%; font-family: 'Segoe UI', sans-serif; background: var(--bg); color: white; display: flex; justify-content: center; align-items: center; overflow: hidden; }
         .bg-blur { position: fixed; width: 100%; height: 100%; background: radial-gradient(circle at 10% 20%, #1a0033 0%, #000 100%); z-index: -1; }
         .container { width: 95%; max-width: 450px; background: rgba(255,255,255,0.08); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.1); border-radius: 30px; padding: 30px; box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8); text-align: center; }
-        #chat-box { height: 400px; overflow-y: auto; margin-bottom: 20px; display: flex; flex-direction: column; gap: 10px; padding: 10px; text-align: left; }
-        .msg { background: linear-gradient(135deg, var(--secondary), var(--primary)); padding: 10px 15px; border-radius: 15px; width: fit-content; max-width: 85%; align-self: flex-start; box-shadow: 0 4px 15px rgba(255, 0, 85, 0.2); }
-        input { width: 100%; background: rgba(0, 0, 0, 0.4); border: 1px solid rgba(255,255,255,0.15); padding: 15px; border-radius: 15px; color: white; outline: none; margin-bottom: 10px; box-sizing: border-box; }
-        .main-btn { background: linear-gradient(90deg, var(--secondary), var(--primary)); border: none; border-radius: 15px; color: white; font-weight: bold; padding: 15px; cursor: pointer; width: 100%; transition: 0.3s; }
+        #chat-box { height: 350px; overflow-y: auto; margin-bottom: 20px; display: flex; flex-direction: column; gap: 10px; padding: 10px; text-align: left; background: rgba(0,0,0,0.2); border-radius: 15px; }
+        .msg { background: linear-gradient(135deg, var(--secondary), var(--primary)); padding: 10px 15px; border-radius: 15px; width: fit-content; max-width: 85%; align-self: flex-start; }
+        input { width: 100%; background: rgba(0, 0, 0, 0.4); border: 1px solid rgba(255,255,255,0.15); padding: 14px; border-radius: 15px; color: white; outline: none; margin-bottom: 10px; box-sizing: border-box; }
+        .btn { background: linear-gradient(90deg, var(--secondary), var(--primary)); border: none; border-radius: 15px; color: white; font-weight: bold; padding: 14px; cursor: pointer; width: 100%; transition: 0.3s; }
     </style>
 </head>
 <body>
     <div class="bg-blur"></div>
 
-    <!-- Логін -->
+    <!-- ЛОГІН -->
     <div id="login-section" class="container">
         <h2>🔒 PRIVATE ACCESS</h2>
-        <div id="load-status" style="color: #ff0055; font-size: 0.7rem; margin-bottom: 10px;">Завантаження...</div>
-        <input type="password" id="pass-code" placeholder="Введіть код">
-        <button class="main-btn" onclick="unlock()">УВІЙТИ</button>
+        <div id="load-info" style="color: #ff0055; font-size: 0.7rem; margin-bottom: 10px;">Завантаження...</div>
+        <input type="text" id="pass-code" placeholder="Введіть код 4269">
+        <button class="btn" onclick="unlock()">УВІЙТИ</button>
     </div>
 
-    <!-- Чат -->
+    <!-- ЧАТ -->
     <div id="chat-section" class="container" style="display: none; max-width: 550px;">
         <h3 id="chat-status" style="color: #00ff88; font-size: 0.8rem; margin-bottom: 10px;">Connecting...</h3>
         <div id="chat-box"></div>
         <div style="display: flex; gap: 10px;">
-            <input type="text" id="msg-input" placeholder="Повідомлення...">
-            <button class="main-btn" onclick="send()" style="width: 70px;">🚀</button>
+            <input type="text" id="msg-input" placeholder="Напиши...">
+            <button class="btn" onclick="send()" style="width: 70px;">🚀</button>
         </div>
     </div>
 
-    <!-- Нові «Мізки» (Завантажуємо через cdnjs, це надійніше) -->
-    <script src="https://cdnjs.cloudflare.com"></script>
-    <script src="https://cdnjs.cloudflare.com"></script>
+    <!-- Тільки один скрипт Firebase (Compat) -->
+    <script src="https://www.gstatic.com"></script>
+    <script src="https://www.gstatic.com"></script>
 
     <script>
         const firebaseConfig = {
@@ -50,17 +50,16 @@
             appId: "1:1904541515416:web:7136a6692bd119f12fe2ed"
         };
 
-        let db;
+        var db;
 
-        // Чекаємо поки все завантажиться
         window.onload = function() {
-            if (typeof firebase !== 'undefined') {
+            try {
                 firebase.initializeApp(firebaseConfig);
                 db = firebase.firestore();
-                document.getElementById('load-status').innerText = "Система готова ✅";
-                document.getElementById('load-status').style.color = "#00ff88";
-            } else {
-                document.getElementById('load-status').innerText = "БЛОКУВАННЯ: Вимкніть AdBlock!";
+                document.getElementById('load-info').innerText = "Система готова ✅";
+                document.getElementById('load-info').style.color = "#00ff88";
+            } catch (e) {
+                document.getElementById('load-info').innerText = "Помилка завантаження!";
             }
         };
 
@@ -69,7 +68,7 @@
                 document.getElementById('login-section').style.display = 'none';
                 document.getElementById('chat-section').style.display = 'block';
                 startChat();
-            } else { alert("Невірний код!"); }
+            } else { alert("Невірно!"); }
         }
 
         function startChat() {
@@ -84,8 +83,6 @@
                     box.appendChild(div);
                 });
                 box.scrollTop = box.scrollHeight;
-            }, (error) => {
-                alert("Помилка бази: " + error.message);
             });
         }
 
