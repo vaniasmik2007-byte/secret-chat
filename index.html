@@ -1,101 +1,81 @@
 <!DOCTYPE html>
 <html lang="uk">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Secret Elite Chat</title>
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Elite Supabase Chat</title>
     <style>
-        :root { --primary: #ff0055; --secondary: #7000ff; --bg: #050505; }
-        body, html { margin: 0; padding: 0; height: 100%; font-family: 'Segoe UI', sans-serif; background: var(--bg); color: white; display: flex; justify-content: center; align-items: center; overflow: hidden; }
-        .bg-blur { position: fixed; width: 100%; height: 100%; background: radial-gradient(circle at 10% 20%, #1a0033 0%, #000 100%); z-index: -1; }
-        .container { width: 95%; max-width: 450px; background: rgba(255,255,255,0.08); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.1); border-radius: 30px; padding: 30px; box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8); text-align: center; }
-        #chat-box { height: 350px; overflow-y: auto; margin-bottom: 20px; display: flex; flex-direction: column; gap: 10px; padding: 10px; text-align: left; background: rgba(0,0,0,0.2); border-radius: 15px; }
-        .msg { background: linear-gradient(135deg, var(--secondary), var(--primary)); padding: 10px 15px; border-radius: 15px; width: fit-content; max-width: 85%; align-self: flex-start; }
-        input { width: 100%; background: rgba(0, 0, 0, 0.4); border: 1px solid rgba(255,255,255,0.15); padding: 14px; border-radius: 15px; color: white; outline: none; margin-bottom: 10px; box-sizing: border-box; }
-        .btn { background: linear-gradient(90deg, var(--secondary), var(--primary)); border: none; border-radius: 15px; color: white; font-weight: bold; padding: 14px; cursor: pointer; width: 100%; transition: 0.3s; }
+        :root { --primary: #00ff88; --bg: #050505; }
+        body { background: var(--bg); color: white; font-family: 'Segoe UI', sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .container { width: 95%; max-width: 400px; background: rgba(255,255,255,0.05); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.1); border-radius: 25px; padding: 30px; text-align: center; }
+        #chat-box { height: 350px; overflow-y: auto; margin-bottom: 15px; display: flex; flex-direction: column; gap: 8px; text-align: left; }
+        .msg { background: rgba(0, 255, 136, 0.1); padding: 10px 15px; border-radius: 15px; border: 1px solid rgba(0, 255, 136, 0.2); word-wrap: break-word; }
+        input { width: 100%; padding: 14px; border-radius: 12px; border: 1px solid #333; background: #000; color: #fff; margin-bottom: 10px; box-sizing: border-box; outline: none; }
+        button { width: 100%; padding: 14px; border-radius: 12px; border: none; background: var(--primary); color: #000; font-weight: bold; cursor: pointer; transition: 0.3s; }
     </style>
 </head>
 <body>
-    <div class="bg-blur"></div>
 
-    <!-- ЛОГІН -->
     <div id="login-section" class="container">
-        <h2>🔒 PRIVATE ACCESS</h2>
-        <div id="load-info" style="color: #ff0055; font-size: 0.7rem; margin-bottom: 10px;">Завантаження...</div>
-        <input type="text" id="pass-code" placeholder="Введіть код 4269">
-        <button class="btn" onclick="unlock()">УВІЙТИ</button>
+        <h2 style="margin-top: 0;">🔒 СЕКРЕТНИЙ ВХІД</h2>
+        <input type="password" id="pass-code" placeholder="Введіть код">
+        <button onclick="unlock()">УВІЙТИ</button>
     </div>
 
-    <!-- ЧАТ -->
-    <div id="chat-section" class="container" style="display: none; max-width: 550px;">
-        <h3 id="chat-status" style="color: #00ff88; font-size: 0.8rem; margin-bottom: 10px;">Connecting...</h3>
+    <div id="chat-section" class="container" style="display: none; max-width: 500px;">
         <div id="chat-box"></div>
-        <div style="display: flex; gap: 10px;">
-            <input type="text" id="msg-input" placeholder="Напиши...">
-            <button class="btn" onclick="send()" style="width: 70px;">🚀</button>
+        <div style="display:flex; gap:8px;">
+            <input type="text" id="msg-input" placeholder="Повідомлення...">
+            <button onclick="send()" style="width:70px;">🚀</button>
         </div>
     </div>
 
-    <!-- Тільки один скрипт Firebase (Compat) -->
-    <script src="https://www.gstatic.com"></script>
-    <script src="https://www.gstatic.com"></script>
-
+    <script src="https://cdn.jsdelivr.net"></script>
     <script>
-        const firebaseConfig = {
-            apiKey: "AIzaSyD03EYUJSS3zTbHgcZuoOWOMpHrhMMyAnM",
-            authDomain: "mysecretchat-aed68.firebaseapp.com",
-            projectId: "mysecretchat-aed68",
-            storageBucket: "mysecretchat-aed68.firebasestorage.app",
-            messagingSenderId: "1904541515416",
-            appId: "1:1904541515416:web:7136a6692bd119f12fe2ed"
-        };
-
-        var db;
-
-        window.onload = function() {
-            try {
-                firebase.initializeApp(firebaseConfig);
-                db = firebase.firestore();
-                document.getElementById('load-info').innerText = "Система готова ✅";
-                document.getElementById('load-info').style.color = "#00ff88";
-            } catch (e) {
-                document.getElementById('load-info').innerText = "Помилка завантаження!";
-            }
-        };
+        // ВСТАВ СВІЙ КЛЮЧ ТУТ:
+        const SUPABASE_URL = 'https://cenlzbfoyeyykvuxwfof.supabase.co';
+        const SUPABASE_KEY = 'ВСТАВ_СЮДИ_СВІЙ_КЛЮЧ_ЯКИЙ_ТІЛЬКИ_ЩО_СКОПІЮВАВ';
+        
+        const client = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
         function unlock() {
             if (document.getElementById('pass-code').value === "4269") {
                 document.getElementById('login-section').style.display = 'none';
                 document.getElementById('chat-section').style.display = 'block';
-                startChat();
+                loadMsgs();
+                subscribe();
             } else { alert("Невірно!"); }
         }
 
-        function startChat() {
-            db.collection("messages").orderBy("timestamp", "asc").onSnapshot((snap) => {
-                document.getElementById('chat-status').innerText = "Elite Chat Online ✅";
+        async function loadMsgs() {
+            const { data } = await client.from('messages').select('*').order('created_at', { ascending: true });
+            if (data) {
                 const box = document.getElementById('chat-box');
                 box.innerHTML = "";
-                snap.forEach(doc => {
-                    const div = document.createElement('div');
-                    div.className = 'msg';
-                    div.innerText = doc.data().text;
-                    box.appendChild(div);
-                });
-                box.scrollTop = box.scrollHeight;
-            });
+                data.forEach(m => renderMsg(m.text));
+            }
+        }
+
+        function subscribe() {
+            client.channel('any').on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, payload => {
+                renderMsg(payload.new.text);
+            }).subscribe();
+        }
+
+        function renderMsg(text) {
+            const box = document.getElementById('chat-box');
+            const div = document.createElement('div');
+            div.className = 'msg';
+            div.innerText = text;
+            box.appendChild(div);
+            box.scrollTop = box.scrollHeight;
         }
 
         async function send() {
             const input = document.getElementById('msg-input');
-            if(!input.value.trim()) return;
-            try {
-                await db.collection("messages").add({
-                    text: input.value,
-                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
-                });
-                input.value = "";
-            } catch(e) { alert("Помилка: " + e.message); }
+            const val = input.value.trim();
+            if (!val) return;
+            await client.from('messages').insert();
+            input.value = "";
         }
     </script>
 </body>
