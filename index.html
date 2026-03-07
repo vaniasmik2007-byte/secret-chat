@@ -1,88 +1,79 @@
 <!DOCTYPE html>
 <html lang="uk">
 <head>
-    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Elite Private Chat</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Elite No-Limit Chat</title>
     <style>
         :root { --primary: #00ff88; --bg: #050505; }
         body { background: var(--bg); color: white; font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
         .container { width: 95%; max-width: 400px; background: rgba(255,255,255,0.05); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.1); border-radius: 25px; padding: 30px; text-align: center; }
         #chat-box { height: 350px; overflow-y: auto; margin-bottom: 15px; display: flex; flex-direction: column; gap: 8px; text-align: left; }
-        .msg { background: rgba(0, 255, 136, 0.1); padding: 10px; border-radius: 12px; border: 1px solid rgba(0, 255, 136, 0.2); }
-        input { width: 100%; padding: 12px; border-radius: 12px; border: 1px solid #333; background: #000; color: #fff; margin-bottom: 10px; box-sizing: border-box; outline: none; }
-        button { width: 100%; padding: 12px; border-radius: 12px; border: none; background: var(--primary); color: #000; font-weight: bold; cursor: pointer; }
+        .msg { background: rgba(0, 255, 136, 0.1); padding: 10px 15px; border-radius: 15px; border: 1px solid rgba(0, 255, 136, 0.2); word-wrap: break-word; }
+        input { width: 100%; padding: 14px; border-radius: 12px; border: 1px solid #333; background: #000; color: #fff; margin-bottom: 10px; box-sizing: border-box; outline: none; }
+        button { width: 100%; padding: 14px; border-radius: 12px; border: none; background: var(--primary); color: #000; font-weight: bold; cursor: pointer; }
     </style>
 </head>
 <body>
 
     <div id="login-section" class="container">
-        <h2 style="margin-top: 0;">🔒 PRIVATE CHAT</h2>
-        <input type="password" id="pass-input" placeholder="Введіть код">
+        <h2 style="margin-top: 0;">🔒 СЕКРЕТНИЙ ЧАТ</h2>
+        <input type="password" id="pass-input" placeholder="Введіть код 4269">
         <button onclick="unlock()">УВІЙТИ</button>
     </div>
 
     <div id="chat-section" class="container" style="display: none; max-width: 500px;">
         <div id="chat-box"></div>
         <div style="display:flex; gap:8px;">
-            <input type="text" id="msg-input" placeholder="Напиши...">
-            <button onclick="sendMsg()" style="width:70px;">🚀</button>
+            <input type="text" id="msg-input" placeholder="Напиши щось...">
+            <button onclick="send()" style="width:70px;">🚀</button>
         </div>
     </div>
 
-    <!-- Завантажуємо бібліотеку Supabase через CDN -->
-    <script src="https://unpkg.com"></script>
+    <!-- Підключаємо Gun.js (не потребує ключів) -->
+    <script src="https://cdn.jsdelivr.net"></script>
 
     <script>
-        const SB_URL = 'https://cenlzbfoyeyykvuxwfof.supabase.co';
-        const SB_KEY = 'sb_publishable_ooL5fspe-_GO8LKBFusdRg_MR1eozbJ';
-        let client;
+        let chat;
 
         function unlock() {
-            const pass = document.getElementById('pass-input').value;
-            if (pass === "4269") {
-                // Тільки при вході створюємо клієнта
-                try {
-                    client = supabase.createClient(SB_URL, SB_KEY);
-                    document.getElementById('login-section').style.display = 'none';
-                    document.getElementById('chat-section').style.display = 'block';
-                    loadMsgs();
-                    subscribe();
-                } catch (e) {
-                    alert("Помилка завантаження бази. Спробуйте оновити сторінку.");
-                }
-            } else {
-                alert("Невірно!");
-            }
+            if (document.getElementById('pass-input').value === "4269") {
+                // Ініціалізуємо чат тільки після входу
+                const gun = Gun(['https://gun-manhattan.herokuapp.com']);
+                // Створюємо унікальну кімнату (зміни ці цифри на будь-які свої)
+                chat = gun.get('secret-room-vaniasnik-2026-unique'); 
+
+                document.getElementById('login-section').style.display = 'none';
+                document.getElementById('chat-section').style.display = 'block';
+
+                // Слухаємо нові повідомлення
+                chat.map().on((data) => {
+                    if (data && data.text) {
+                        renderMsg(data.text);
+                    }
+                });
+            } else { alert("Невірно!"); }
         }
 
-        async function loadMsgs() {
-            const { data, error } = await client.from('messages').select('*').order('created_at', { ascending: true });
-            if (error) console.log("Помилка завантаження:", error.message);
-            if (data) data.forEach(m => renderMsg(m.text));
+        function renderMsg(text) {
+            const box = document.getElementById('chat-box');
+            // Перевірка, щоб не дублювати повідомлення
+            const id = btoa(text).substring(0, 10);
+            if (document.getElementById(id)) return;
+
+            const div = document.createElement('div');
+            div.id = id;
+            div.className = 'msg';
+            div.innerText = text;
+            box.appendChild(div);
+            box.scrollTop = box.scrollHeight;
         }
 
-        function subscribe() {
-            client.channel('any').on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, p => {
-                renderMsg(p.new.text);
-            }).subscribe();
-        }
-
-        function renderMsg(t) {
-            const b = document.getElementById('chat-box');
-            const d = document.createElement('div');
-            d.className = 'msg';
-            d.innerText = t;
-            b.appendChild(d);
-            b.scrollTop = b.scrollHeight;
-        }
-
-        async function sendMsg() {
-            const i = document.getElementById('msg-input');
-            const val = i.value.trim();
-            if (!val || !client) return;
-            const { error } = await client.from('messages').insert();
-            if (error) console.log("Помилка відправки:", error.message);
-            i.value = "";
+        function send() {
+            const input = document.getElementById('msg-input');
+            if (!input.value.trim()) return;
+            chat.set({ text: input.value.trim() });
+            input.value = "";
         }
     </script>
 </body>
