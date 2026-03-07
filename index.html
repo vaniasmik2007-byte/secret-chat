@@ -6,7 +6,7 @@
     <style>
         :root { --primary: #00ff88; --bg: #050505; }
         body { background: var(--bg); color: white; font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
-        .container { width: 90%; max-width: 400px; background: rgba(255,255,255,0.05); padding: 30px; border-radius: 25px; text-align: center; border: 1px solid rgba(255,255,255,0.1); }
+        .container { width: 95%; max-width: 400px; background: rgba(255,255,255,0.05); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.1); border-radius: 25px; padding: 30px; text-align: center; }
         #chat-box { height: 350px; overflow-y: auto; margin-bottom: 15px; display: flex; flex-direction: column; gap: 8px; text-align: left; }
         .msg { background: rgba(0, 255, 136, 0.1); padding: 10px; border-radius: 12px; border: 1px solid rgba(0, 255, 136, 0.2); }
         input { width: 100%; padding: 12px; border-radius: 12px; border: 1px solid #333; background: #000; color: #fff; margin-bottom: 10px; box-sizing: border-box; outline: none; }
@@ -14,20 +14,22 @@
     </style>
 </head>
 <body>
+
     <div id="login-section" class="container">
-        <h2 style="margin: 0 0 15px 0;">🔒 PRIVATE CHAT</h2>
+        <h2 style="margin-top: 0;">🔒 PRIVATE CHAT</h2>
         <input type="password" id="pass-input" placeholder="Введіть код">
         <button onclick="unlock()">УВІЙТИ</button>
     </div>
 
     <div id="chat-section" class="container" style="display: none; max-width: 500px;">
         <div id="chat-box"></div>
-        <div style="display:flex; gap:5px;">
+        <div style="display:flex; gap:8px;">
             <input type="text" id="msg-input" placeholder="Напиши...">
-            <button id="send-btn" style="width:60px;">🚀</button>
+            <button onclick="sendMsg()" style="width:70px;">🚀</button>
         </div>
     </div>
 
+    <!-- Завантажуємо бібліотеку Supabase через CDN -->
     <script src="https://unpkg.com"></script>
 
     <script>
@@ -35,39 +37,51 @@
         const SB_KEY = 'sb_publishable_ooL5fspe-_GO8LKBFusdRg_MR1eozbJ';
         let client;
 
-        try {
-            client = supabase.createClient(SB_URL, SB_KEY);
-        } catch(e) { console.log("Помилка ініціалізації"); }
-
         function unlock() {
             const pass = document.getElementById('pass-input').value;
             if (pass === "4269") {
-                document.getElementById('login-section').style.display = 'none';
-                document.getElementById('chat-section').style.display = 'block';
-                loadMsgs();
-                subscribe();
-            } else { alert("Невірно!"); }
+                // Тільки при вході створюємо клієнта
+                try {
+                    client = supabase.createClient(SB_URL, SB_KEY);
+                    document.getElementById('login-section').style.display = 'none';
+                    document.getElementById('chat-section').style.display = 'block';
+                    loadMsgs();
+                    subscribe();
+                } catch (e) {
+                    alert("Помилка завантаження бази. Спробуйте оновити сторінку.");
+                }
+            } else {
+                alert("Невірно!");
+            }
         }
 
         async function loadMsgs() {
-            const { data } = await client.from('messages').select('*').order('created_at', { ascending: true });
+            const { data, error } = await client.from('messages').select('*').order('created_at', { ascending: true });
+            if (error) console.log("Помилка завантаження:", error.message);
             if (data) data.forEach(m => renderMsg(m.text));
         }
 
         function subscribe() {
-            client.channel('any').on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, p => renderMsg(p.new.text)).subscribe();
+            client.channel('any').on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, p => {
+                renderMsg(p.new.text);
+            }).subscribe();
         }
 
         function renderMsg(t) {
             const b = document.getElementById('chat-box');
-            const d = document.createElement('div'); d.className = 'msg'; d.innerText = t;
-            b.appendChild(d); b.scrollTop = b.scrollHeight;
+            const d = document.createElement('div');
+            d.className = 'msg';
+            d.innerText = t;
+            b.appendChild(d);
+            b.scrollTop = b.scrollHeight;
         }
 
-        document.getElementById('send-btn').onclick = async () => {
+        async function sendMsg() {
             const i = document.getElementById('msg-input');
-            if (!i.value.trim()) return;
-            await client.from('messages').insert();
+            const val = i.value.trim();
+            if (!val || !client) return;
+            const { error } = await client.from('messages').insert();
+            if (error) console.log("Помилка відправки:", error.message);
             i.value = "";
         }
     </script>
