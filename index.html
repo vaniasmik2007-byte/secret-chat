@@ -5,45 +5,44 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Elite Private Chat</title>
     <style>
-        :root { --primary: #ff0055; --secondary: #7000ff; --bg: #050505; --glass: rgba(255, 255, 255, 0.08); --border: rgba(255, 255, 255, 0.15); }
-        body, html { margin: 0; padding: 0; height: 100%; font-family: 'Inter', sans-serif; background: var(--bg); color: white; display: flex; justify-content: center; align-items: center; overflow: hidden; }
-        .bg-blur { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: radial-gradient(circle at 10% 20%, #1a0033 0%, #000 100%); z-index: -1; }
-        .container { width: 95%; max-width: 500px; background: var(--glass); backdrop-filter: blur(30px); border: 1px solid var(--border); border-radius: 30px; padding: 30px; box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8); text-align: center; }
-        #chat-box { height: 400px; overflow-y: auto; margin-bottom: 20px; display: flex; flex-direction: column; gap: 10px; padding: 10px; text-align: left; }
-        .msg { background: rgba(255, 255, 255, 0.1); padding: 10px 15px; border-radius: 18px; width: fit-content; max-width: 85%; position: relative; border: 1px solid var(--border); }
-        .msg b { color: var(--primary); font-size: 0.8rem; display: block; margin-bottom: 3px; }
-        .my-msg { align-self: flex-end; background: linear-gradient(135deg, var(--secondary), var(--primary)); border: none; }
-        .my-msg b { color: white; opacity: 0.8; }
-        .controls { display: flex; gap: 8px; align-items: center; }
-        input { width: 100%; background: rgba(0, 0, 0, 0.4); border: 1px solid var(--border); padding: 12px; border-radius: 15px; color: white; outline: none; }
-        .main-btn { background: linear-gradient(90deg, var(--secondary), var(--primary)); border: none; border-radius: 15px; color: white; font-weight: bold; padding: 12px 18px; cursor: pointer; transition: 0.3s; }
-        .main-btn:active { transform: scale(0.95); }
+        :root { --primary: #ff0055; --secondary: #7000ff; --bg: #050505; --glass: rgba(255, 255, 255, 0.1); }
+        body, html { margin: 0; padding: 0; height: 100%; font-family: 'Segoe UI', sans-serif; background: var(--bg); color: white; display: flex; justify-content: center; align-items: center; overflow: hidden; }
+        .bg-blur { position: fixed; width: 100%; height: 100%; background: radial-gradient(circle at 10% 20%, #1a0033 0%, #000 100%); z-index: -1; }
+        .container { width: 95%; max-width: 450px; background: var(--glass); backdrop-filter: blur(30px); border: 1px solid rgba(255,255,255,0.1); border-radius: 30px; padding: 30px; box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8); text-align: center; }
+        #chat-box { height: 380px; overflow-y: auto; margin-bottom: 20px; display: flex; flex-direction: column; gap: 10px; padding: 10px; text-align: left; }
+        .msg { background: rgba(255, 255, 255, 0.1); padding: 10px 15px; border-radius: 15px; width: fit-content; max-width: 85%; border-bottom-left-radius: 2px; }
+        .msg b { color: var(--primary); font-size: 0.8rem; display: block; }
+        .controls { display: flex; gap: 10px; }
+        input { width: 100%; background: rgba(0, 0, 0, 0.4); border: 1px solid rgba(255,255,255,0.2); padding: 14px; border-radius: 15px; color: white; outline: none; margin-bottom: 10px; box-sizing: border-box; }
+        .main-btn { background: linear-gradient(90deg, var(--secondary), var(--primary)); border: none; border-radius: 15px; color: white; font-weight: bold; padding: 15px; cursor: pointer; transition: 0.3s; width: 100%; }
+        #status-info { font-size: 0.7rem; margin-bottom: 10px; color: #ff0055; }
     </style>
 </head>
 <body>
     <div class="bg-blur"></div>
 
-    <!-- ВХІД -->
+    <!-- ЕКРАН ВХОДУ -->
     <div id="login-section" class="container">
-        <h2>🔒 PRIVATE ACCESS</h2>
-        <input type="text" id="user-name" placeholder="Твій Нікнейм..." style="margin-bottom: 10px;">
-        <input type="password" id="pass-code" placeholder="Код (4269)">
-        <button class="main-btn" onclick="unlock()" style="width: 100%; margin-top: 10px;">УВІЙТИ</button>
+        <h2 style="margin-top: 0; letter-spacing: 2px;">🔒 PRIVATE ACCESS</h2>
+        <div id="status-info">Завантаження системи...</div>
+        <input type="text" id="user-name" placeholder="Твій Нік">
+        <input type="password" id="pass-code" placeholder="Код доступу">
+        <button class="main-btn" onclick="unlock()">УВІЙТИ</button>
     </div>
 
-    <!-- ЧАТ -->
-    <div id="chat-section" class="container" style="display: none; max-width: 600px;">
+    <!-- ЕКРАН ЧАТУ -->
+    <div id="chat-section" class="container" style="display: none; max-width: 550px;">
         <div style="display:flex; justify-content: space-between; margin-bottom: 10px;">
-            <span id="status" style="color: #00ff88; font-size: 0.8rem;">Online ✅</span>
-            <span id="display-name" style="color: gray; font-size: 0.8rem;"></span>
+            <span id="chat-status" style="color: #00ff88; font-size: 0.8rem;">Online ✅</span>
         </div>
         <div id="chat-box"></div>
         <div class="controls">
-            <input type="text" id="msg-input" placeholder="Напиши повідомлення...">
-            <button class="main-btn" onclick="send()">🚀</button>
+            <input type="text" id="msg-input" placeholder="Напиши повідомлення..." style="margin-bottom: 0;">
+            <button class="main-btn" onclick="send()" style="width: 70px;">🚀</button>
         </div>
     </div>
 
+    <!-- Пряме підключення бібліотек Google (Версія 8.10.1) -->
     <script src="https://www.gstatic.com"></script>
     <script src="https://www.gstatic.com"></script>
 
@@ -57,33 +56,46 @@
             appId: "1:1904541515416:web:7136a6692bd119f12fe2ed"
         };
 
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.firestore();
-        let myName = "";
+        let db;
+        let myNick = "";
+
+        // Ініціалізація бази
+        window.onload = function() {
+            if (typeof firebase !== 'undefined') {
+                firebase.initializeApp(firebaseConfig);
+                db = firebase.firestore();
+                document.getElementById('status-info').innerText = "Система готова ✅";
+                document.getElementById('status-info').style.color = "#00ff88";
+            } else {
+                document.getElementById('status-info').innerText = "Помилка! Спробуйте інший браузер або вимкніть AdBlock.";
+            }
+        };
 
         function unlock() {
             const name = document.getElementById('user-name').value.trim();
-            const code = document.getElementById('pass-code').value;
+            const code = document.getElementById('pass-code').value.trim();
             
-            if (!name) { alert("Введи свій нік!"); return; }
+            if (typeof firebase === 'undefined') {
+                alert("Система не завантажена. Спробуйте оновити сторінку або зайти з телефона.");
+                return;
+            }
+            if (!name) { alert("Введіть свій нік!"); return; }
             if (code === "4269") {
-                myName = name;
-                document.getElementById('display-name').innerText = "Ти: " + myName;
+                myNick = name;
                 document.getElementById('login-section').style.display = 'none';
                 document.getElementById('chat-section').style.display = 'block';
-                startChat();
-            } else { alert("Код невірний!"); }
+                startChatService();
+            } else { alert("Невірний код!"); }
         }
 
-        function startChat() {
+        function startChatService() {
             db.collection("messages").orderBy("timestamp", "asc").onSnapshot((snap) => {
                 const box = document.getElementById('chat-box');
                 box.innerHTML = "";
                 snap.forEach(doc => {
                     const m = doc.data();
-                    const isMe = m.sender === myName;
                     const div = document.createElement('div');
-                    div.className = `msg ${isMe ? 'my-msg' : ''}`;
+                    div.className = 'msg';
                     div.innerHTML = `<b>${m.sender}</b>${m.text}`;
                     box.appendChild(div);
                 });
@@ -93,17 +105,18 @@
 
         async function send() {
             const input = document.getElementById('msg-input');
-            const text = input.value.trim();
-            if (!text) return;
+            const val = input.value.trim();
+            if (!val) return;
             
             await db.collection("messages").add({
-                text: text,
-                sender: myName,
+                text: val,
+                sender: myNick,
                 timestamp: firebase.firestore.FieldValue.serverTimestamp()
             });
             input.value = "";
         }
 
+        // Відправка через Enter
         document.getElementById('msg-input').onkeypress = (e) => { if(e.key === 'Enter') send(); };
     </script>
 </body>
