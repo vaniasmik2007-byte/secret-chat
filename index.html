@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Elite Private Chat</title>
+    <style>
+        :root { --primary: #ff0055; --secondary: #7000ff; --bg: #050505; --glass: rgba(255, 255, 255, 0.1); }
+        body, html { margin: 0; padding: 0; height: 100%; font-family: 'Segoe UI', sans-serif; background: var(--bg); color: white; display: flex; justify-content: center; align-items: center; overflow: hidden; }
+        .bg-blur { position: fixed; width: 100%; height: 100%; background: radial-gradient(circle at 10% 20%, #1a0033 0%, #000 100%); z-index: -1; }
+        .container { width: 95%; max-width: 450px; background: var(--glass); backdrop-filter: blur(30px); border: 1px solid rgba(255,255,255,0.1); border-radius: 30px; padding: 30px; box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8); text-align: center; }
+        input { width: 100%; background: rgba(0, 0, 0, 0.4); border: 1px solid rgba(255,255,255,0.2); padding: 14px; border-radius: 15px; color: white; outline: none; margin-bottom: 15px; box-sizing: border-box; }
+        .main-btn { background: linear-gradient(90deg, var(--secondary), var(--primary)); border: none; border-radius: 15px; color: white; font-weight: bold; padding: 15px; cursor: pointer; width: 100%; transition: 0.3s; }
+        #chat-box { height: 350px; overflow-y: auto; margin-bottom: 20px; display: flex; flex-direction: column; gap: 10px; padding: 10px; text-align: left; }
+        .msg { background: rgba(255, 255, 255, 0.1); padding: 10px 15px; border-radius: 15px; width: fit-content; max-width: 85%; border: 1px solid rgba(255,255,255,0.05); }
+    </style>
+</head>
+<body>
+    <div class="bg-blur"></div>
+
+    <div id="login-section" class="container">
+        <h2>🔒 PRIVATE ACCESS</h2>
+        <div id="load-status" style="font-size: 0.7rem; color: #ff0055; margin-bottom: 10px;">Чекаю завантаження Google-модулів...</div>
+        <input type="password" id="pass-code" placeholder="Введіть код">
+        <button class="main-btn" id="login-btn">УВІЙТИ</button>
+    </div>
+
+    <div id="chat-section" class="container" style="display: none; max-width: 550px;">
+        <h3 id="status" style="margin: 0 0 15px 0; color: #00ff88;">Elite Chat Online ✅</h3>
+        <div id="chat-box"></div>
+        <div style="display: flex; gap: 10px;">
+            <input type="text" id="msg-input" placeholder="Повідомлення..." style="margin-bottom: 0;">
+            <button class="main-btn" id="send-btn" style="width: 70px;">🚀</button>
+        </div>
+    </div>
+
+    <!-- Завантажуємо скрипти Firebase окремо -->
+    <script src="https://www.gstatic.com"></script>
+    <script src="https://www.gstatic.com"></script>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyD03EYUJSS3zTbHgcZuoOWOMpHrhMMyAnM",
+            authDomain: "mysecretchat-aed68.firebaseapp.com",
+            projectId: "mysecretchat-aed68",
+            storageBucket: "mysecretchat-aed68.firebasestorage.app",
+            messagingSenderId: "1904541515416",
+            appId: "1:1904541515416:web:7136a6692bd119f12fe2ed"
+        };
+
+        const SECRET = "4269";
+
+        // Перевірка чи завантажився Firebase
+        function checkFirebase() {
+            if (typeof firebase !== 'undefined') {
+                firebase.initializeApp(firebaseConfig);
+                window.db = firebase.firestore();
+                document.getElementById('load-status').innerText = "Система готова ✅";
+                document.getElementById('load-status').style.color = "#00ff88";
+                return true;
+            }
+            return false;
+        }
+
+        // Постійно перевіряємо завантаження
+        let checkTimer = setInterval(() => {
+            if (checkFirebase()) clearInterval(checkTimer);
+        }, 500);
+
+        document.getElementById('login-btn').onclick = function() {
+            if (typeof firebase === 'undefined') {
+                alert("Помилка: Модулі Google все ще заблоковані. Спробуй роздати інтернет з телефона!");
+                return;
+            }
+            if (document.getElementById('pass-code').value === SECRET) {
+                document.getElementById('login-section').style.display = 'none';
+                document.getElementById('chat-section').style.display = 'block';
+                startApp();
+            } else { alert("Код невірний!"); }
+        };
+
+        function startApp() {
+            window.db.collection("messages").orderBy("timestamp", "asc").onSnapshot((snap) => {
+                const box = document.getElementById('chat-box');
+                box.innerHTML = "";
+                snap.forEach(doc => {
+                    const m = doc.data();
+                    const div = document.createElement('div');
+                    div.className = 'msg';
+                    div.innerText = m.text;
+                    box.appendChild(div);
+                });
+                box.scrollTop = box.scrollHeight;
+            });
+        }
+
+        document.getElementById('send-btn').onclick = async function() {
+            const input = document.getElementById('msg-input');
+            if(!input.value.trim()) return;
+            await window.db.collection("messages").add({
+                text: input.value,
+                timestamp: firebase.firestore.FieldValue.serverTimestamp()
+            });
+            input.value = "";
+        };
+    </script>
+</body>
+</html>
