@@ -1,102 +1,75 @@
 <!DOCTYPE html>
 <html lang="uk">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Elite Private Chat</title>
-    <!-- Завантажуємо бібліотеку в head, щоб вона була першою -->
-    <script src="https://cdn.jsdelivr.net"></script>
     <style>
         :root { --primary: #00ff88; --bg: #050505; }
-        body { background: var(--bg); color: white; font-family: 'Segoe UI', sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; overflow: hidden; }
-        .container { width: 90%; max-width: 400px; background: rgba(255,255,255,0.05); backdrop-filter: blur(15px); border: 1px solid rgba(255,255,255,0.1); border-radius: 20px; padding: 25px; text-align: center; }
-        #chat-box { height: 350px; overflow-y: auto; margin-bottom: 15px; display: flex; flex-direction: column; gap: 8px; text-align: left; padding: 5px; }
-        .msg { background: rgba(0, 255, 136, 0.1); padding: 10px; border-radius: 12px; border: 1px solid rgba(0, 255, 136, 0.2); word-break: break-all; }
-        input { width: 100%; padding: 12px; border-radius: 10px; border: 1px solid #333; background: #000; color: #fff; margin-bottom: 10px; box-sizing: border-box; outline: none; }
-        button { width: 100%; padding: 12px; border-radius: 10px; border: none; background: var(--primary); color: #000; font-weight: bold; cursor: pointer; }
-        #status { font-size: 11px; margin-bottom: 10px; color: #ff0055; }
+        body { background: var(--bg); color: white; font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .container { width: 90%; max-width: 400px; background: rgba(255,255,255,0.05); padding: 30px; border-radius: 25px; text-align: center; border: 1px solid rgba(255,255,255,0.1); }
+        #chat-box { height: 350px; overflow-y: auto; margin-bottom: 15px; display: flex; flex-direction: column; gap: 8px; text-align: left; }
+        .msg { background: rgba(0, 255, 136, 0.1); padding: 10px; border-radius: 12px; border: 1px solid rgba(0, 255, 136, 0.2); }
+        input { width: 100%; padding: 12px; border-radius: 12px; border: 1px solid #333; background: #000; color: #fff; margin-bottom: 10px; box-sizing: border-box; outline: none; }
+        button { width: 100%; padding: 12px; border-radius: 12px; border: none; background: var(--primary); color: #000; font-weight: bold; cursor: pointer; }
     </style>
 </head>
 <body>
-
-    <div id="login-screen" class="container">
-        <h2 style="margin: 0 0 10px 0;">🔒 ВХІД</h2>
-        <div id="status">Завантаження...</div>
-        <input type="password" id="pass-input" placeholder="Код доступу">
-        <button id="btn-login" disabled>ЗАЧЕКАЙТЕ...</button>
+    <div id="login-section" class="container">
+        <h2 style="margin: 0 0 15px 0;">🔒 PRIVATE CHAT</h2>
+        <input type="password" id="pass-input" placeholder="Введіть код">
+        <button onclick="unlock()">УВІЙТИ</button>
     </div>
 
-    <div id="chat-screen" class="container" style="display: none; max-width: 500px;">
+    <div id="chat-section" class="container" style="display: none; max-width: 500px;">
         <div id="chat-box"></div>
         <div style="display:flex; gap:5px;">
-            <input type="text" id="msg-input" placeholder="Повідомлення...">
-            <button id="btn-send" style="width:60px;">🚀</button>
+            <input type="text" id="msg-input" placeholder="Напиши...">
+            <button id="send-btn" style="width:60px;">🚀</button>
         </div>
     </div>
+
+    <script src="https://unpkg.com"></script>
 
     <script>
         const SB_URL = 'https://cenlzbfoyeyykvuxwfof.supabase.co';
         const SB_KEY = 'sb_publishable_ooL5fspe-_GO8LKBFusdRg_MR1eozbJ';
-        let sb;
+        let client;
 
-        // 1. Перевірка завантаження бібліотеки
-        const checkInterval = setInterval(() => {
-            if (typeof supabase !== 'undefined') {
-                clearInterval(checkInterval);
-                sb = supabase.createClient(SB_URL, SB_KEY);
-                document.getElementById('status').innerText = "СИСТЕМА ГОТОВА ✅";
-                document.getElementById('status').style.color = "#00ff88";
-                document.getElementById('btn-login').innerText = "УВІЙТИ";
-                document.getElementById('btn-login').disabled = false;
-            }
-        }, 500);
+        try {
+            client = supabase.createClient(SB_URL, SB_KEY);
+        } catch(e) { console.log("Помилка ініціалізації"); }
 
-        // 2. Вхід
-        document.getElementById('btn-login').onclick = async () => {
-            if (document.getElementById('pass-input').value === "4269") {
-                document.getElementById('login-screen').style.display = 'none';
-                document.getElementById('chat-screen').style.display = 'block';
-                await loadMessages();
-                setupRealtime();
+        function unlock() {
+            const pass = document.getElementById('pass-input').value;
+            if (pass === "4269") {
+                document.getElementById('login-section').style.display = 'none';
+                document.getElementById('chat-section').style.display = 'block';
+                loadMsgs();
+                subscribe();
             } else { alert("Невірно!"); }
-        };
+        }
 
-        // 3. Завантаження повідомлень
-        async function loadMessages() {
-            const { data, error } = await sb.from('messages').select('*').order('created_at', { ascending: true });
-            if (error) console.error(error);
+        async function loadMsgs() {
+            const { data } = await client.from('messages').select('*').order('created_at', { ascending: true });
             if (data) data.forEach(m => renderMsg(m.text));
         }
 
-        // 4. Реальний час
-        function setupRealtime() {
-            sb.channel('public:messages').on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, payload => {
-                renderMsg(payload.new.text);
-            }).subscribe();
+        function subscribe() {
+            client.channel('any').on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, p => renderMsg(p.new.text)).subscribe();
         }
 
-        function renderMsg(text) {
-            const box = document.getElementById('chat-box');
-            const div = document.createElement('div');
-            div.className = 'msg';
-            div.innerText = text;
-            box.appendChild(div);
-            box.scrollTop = box.scrollHeight;
+        function renderMsg(t) {
+            const b = document.getElementById('chat-box');
+            const d = document.createElement('div'); d.className = 'msg'; d.innerText = t;
+            b.appendChild(d); b.scrollTop = b.scrollHeight;
         }
 
-        // 5. Відправка
-        document.getElementById('btn-send').onclick = async () => {
-            const input = document.getElementById('msg-input');
-            if (!input.value.trim()) return;
-            const { error } = await sb.from('messages').insert();
-            if (error) alert("Помилка: " + error.message);
-            input.value = "";
-        };
-
-        // Відправка по Enter
-        document.getElementById('msg-input').onkeypress = (e) => {
-            if (e.key === 'Enter') document.getElementById('btn-send').click();
-        };
+        document.getElementById('send-btn').onclick = async () => {
+            const i = document.getElementById('msg-input');
+            if (!i.value.trim()) return;
+            await client.from('messages').insert();
+            i.value = "";
+        }
     </script>
 </body>
 </html>
