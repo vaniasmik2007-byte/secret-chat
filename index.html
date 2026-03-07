@@ -5,14 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Elite Private Chat</title>
     <style>
-        :root { --primary: #ff0055; --secondary: #7000ff; --bg: #050505; --glass: rgba(255, 255, 255, 0.1); }
+        :root { --primary: #ff0055; --secondary: #7000ff; --bg: #050505; --glass: rgba(255, 255, 255, 0.08); --border: rgba(255, 255, 255, 0.15); }
         body, html { margin: 0; padding: 0; height: 100%; font-family: 'Segoe UI', sans-serif; background: var(--bg); color: white; display: flex; justify-content: center; align-items: center; overflow: hidden; }
-        .bg-blur { position: fixed; width: 100%; height: 100%; background: radial-gradient(circle at 10% 20%, #1a0033 0%, #000 100%); z-index: -1; }
-        .container { width: 95%; max-width: 450px; background: var(--glass); backdrop-filter: blur(30px); border: 1px solid rgba(255,255,255,0.1); border-radius: 30px; padding: 30px; box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8); text-align: center; }
-        input { width: 100%; background: rgba(0, 0, 0, 0.4); border: 1px solid rgba(255,255,255,0.2); padding: 14px; border-radius: 15px; color: white; outline: none; margin-bottom: 15px; box-sizing: border-box; }
-        .main-btn { background: linear-gradient(90deg, var(--secondary), var(--primary)); border: none; border-radius: 15px; color: white; font-weight: bold; padding: 15px; cursor: pointer; width: 100%; transition: 0.3s; }
-        #chat-box { height: 350px; overflow-y: auto; margin-bottom: 20px; display: flex; flex-direction: column; gap: 10px; padding: 10px; text-align: left; }
-        .msg { background: rgba(255, 255, 255, 0.1); padding: 10px 15px; border-radius: 15px; width: fit-content; max-width: 85%; border: 1px solid rgba(255,255,255,0.05); }
+        .bg-blur { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: radial-gradient(circle at 10% 20%, #1a0033 0%, #000 100%); z-index: -1; }
+        .container { width: 95%; max-width: 500px; background: var(--glass); backdrop-filter: blur(30px); border: 1px solid var(--border); border-radius: 30px; padding: 30px; box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8); text-align: center; }
+        #chat-box { height: 400px; overflow-y: auto; margin-bottom: 20px; display: flex; flex-direction: column; gap: 15px; padding: 10px; text-align: left; }
+        .msg { background: linear-gradient(135deg, var(--secondary), var(--primary)); padding: 12px 18px; border-radius: 20px; border-bottom-right-radius: 5px; max-width: 85%; align-self: flex-end; }
+        input { width: 100%; background: rgba(0, 0, 0, 0.4); border: 1px solid var(--border); padding: 14px; border-radius: 15px; color: white; outline: none; box-sizing: border-box; }
+        .main-btn { background: linear-gradient(90deg, var(--secondary), var(--primary)); border: none; border-radius: 15px; color: white; font-weight: bold; padding: 12px 20px; cursor: pointer; transition: 0.3s; }
     </style>
 </head>
 <body>
@@ -20,21 +20,21 @@
 
     <div id="login-section" class="container">
         <h2>🔒 PRIVATE ACCESS</h2>
-        <div id="load-status" style="font-size: 0.7rem; color: #ff0055; margin-bottom: 10px;">Чекаю завантаження Google-модулів...</div>
-        <input type="password" id="pass-code" placeholder="Введіть код">
-        <button class="main-btn" id="login-btn">УВІЙТИ</button>
+        <div id="load-status" style="font-size: 0.7rem; color: #ff0055; margin-bottom: 10px;">Завантаження...</div>
+        <input type="password" id="pass-code" placeholder="Введіть код 4269">
+        <button class="main-btn" onclick="unlock()" style="width: 100%; margin-top: 15px;">УВІЙТИ</button>
     </div>
 
-    <div id="chat-section" class="container" style="display: none; max-width: 550px;">
-        <h3 id="status" style="margin: 0 0 15px 0; color: #00ff88;">Elite Chat Online ✅</h3>
+    <div id="chat-section" class="container" style="display: none;">
+        <h3 id="status" style="margin: 0 0 15px 0; color: #00ff88;">Online ✅</h3>
         <div id="chat-box"></div>
         <div style="display: flex; gap: 10px;">
-            <input type="text" id="msg-input" placeholder="Повідомлення..." style="margin-bottom: 0;">
-            <button class="main-btn" id="send-btn" style="width: 70px;">🚀</button>
+            <input type="text" id="msg-input" placeholder="Напиши щось...">
+            <button class="main-btn" onclick="send()">🚀</button>
         </div>
     </div>
 
-    <!-- Завантажуємо скрипти Firebase окремо -->
+    <!-- Завантажуємо бібліотеки Google -->
     <script src="https://www.gstatic.com"></script>
     <script src="https://www.gstatic.com"></script>
 
@@ -48,38 +48,26 @@
             appId: "1:1904541515416:web:7136a6692bd119f12fe2ed"
         };
 
-        const SECRET = "4269";
-
-        // Перевірка чи завантажився Firebase
-        function checkFirebase() {
+        window.onload = function() {
             if (typeof firebase !== 'undefined') {
                 firebase.initializeApp(firebaseConfig);
                 window.db = firebase.firestore();
                 document.getElementById('load-status').innerText = "Система готова ✅";
                 document.getElementById('load-status').style.color = "#00ff88";
-                return true;
+            } else {
+                document.getElementById('load-status').innerText = "ПОМИЛКА: Модулі заблоковані!";
             }
-            return false;
-        }
-
-        // Постійно перевіряємо завантаження
-        let checkTimer = setInterval(() => {
-            if (checkFirebase()) clearInterval(checkTimer);
-        }, 500);
-
-        document.getElementById('login-btn').onclick = function() {
-            if (typeof firebase === 'undefined') {
-                alert("Помилка: Модулі Google все ще заблоковані. Спробуй роздати інтернет з телефона!");
-                return;
-            }
-            if (document.getElementById('pass-code').value === SECRET) {
-                document.getElementById('login-section').style.display = 'none';
-                document.getElementById('chat-section').style.display = 'block';
-                startApp();
-            } else { alert("Код невірний!"); }
         };
 
-        function startApp() {
+        function unlock() {
+            if (document.getElementById('pass-code').value === "4269") {
+                document.getElementById('login-section').style.display = 'none';
+                document.getElementById('chat-section').style.display = 'block';
+                startChat();
+            } else { alert("Невірний код!"); }
+        }
+
+        function startChat() {
             window.db.collection("messages").orderBy("timestamp", "asc").onSnapshot((snap) => {
                 const box = document.getElementById('chat-box');
                 box.innerHTML = "";
@@ -94,7 +82,7 @@
             });
         }
 
-        document.getElementById('send-btn').onclick = async function() {
+        async function send() {
             const input = document.getElementById('msg-input');
             if(!input.value.trim()) return;
             await window.db.collection("messages").add({
@@ -102,7 +90,7 @@
                 timestamp: firebase.firestore.FieldValue.serverTimestamp()
             });
             input.value = "";
-        };
+        }
     </script>
 </body>
 </html>
