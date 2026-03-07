@@ -1,79 +1,47 @@
 <!DOCTYPE html>
-<html lang="uk">
+<html lang="ru">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Elite No-Limit Chat</title>
+    <meta charset="UTF-8"><title>Final Test Chat</title>
     <style>
-        :root { --primary: #00ff88; --bg: #050505; }
-        body { background: var(--bg); color: white; font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
-        .container { width: 95%; max-width: 400px; background: rgba(255,255,255,0.05); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.1); border-radius: 25px; padding: 30px; text-align: center; }
-        #chat-box { height: 350px; overflow-y: auto; margin-bottom: 15px; display: flex; flex-direction: column; gap: 8px; text-align: left; }
-        .msg { background: rgba(0, 255, 136, 0.1); padding: 10px 15px; border-radius: 15px; border: 1px solid rgba(0, 255, 136, 0.2); word-wrap: break-word; }
-        input { width: 100%; padding: 14px; border-radius: 12px; border: 1px solid #333; background: #000; color: #fff; margin-bottom: 10px; box-sizing: border-box; outline: none; }
-        button { width: 100%; padding: 14px; border-radius: 12px; border: none; background: var(--primary); color: #000; font-weight: bold; cursor: pointer; }
+        body { background: #050505; color: #00ff88; font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .box { background: #111; padding: 30px; border-radius: 20px; border: 1px solid #333; text-align: center; width: 300px; }
+        input { width: 100%; padding: 10px; margin: 10px 0; border-radius: 10px; border: 1px solid #444; background: #000; color: #fff; box-sizing: border-box; }
+        button { width: 100%; padding: 10px; border-radius: 10px; border: none; background: #00ff88; color: #000; font-weight: bold; cursor: pointer; }
     </style>
 </head>
 <body>
 
-    <div id="login-section" class="container">
-        <h2 style="margin-top: 0;">🔒 СЕКРЕТНИЙ ЧАТ</h2>
-        <input type="password" id="pass-input" placeholder="Введіть код 4269">
-        <button onclick="unlock()">УВІЙТИ</button>
+    <div id="login-section" class="box">
+        <h2>🔒 ВХОД</h2>
+        <input type="password" id="pass-input" placeholder="Код 4269">
+        <button onclick="unlock()">ВОЙТИ</button>
     </div>
 
-    <div id="chat-section" class="container" style="display: none; max-width: 500px;">
-        <div id="chat-box"></div>
-        <div style="display:flex; gap:8px;">
-            <input type="text" id="msg-input" placeholder="Напиши щось...">
-            <button onclick="send()" style="width:70px;">🚀</button>
-        </div>
+    <div id="chat-section" class="box" style="display: none;">
+        <div id="chat-box" style="height: 200px; overflow-y: auto; text-align: left; margin-bottom: 10px; border-bottom: 1px solid #333;"></div>
+        <input type="text" id="msg-input" placeholder="Напиши что-то">
+        <button onclick="send()">ОТПРАВИТЬ</button>
     </div>
-
-    <!-- Підключаємо Gun.js (не потребує ключів) -->
-    <script src="https://cdn.jsdelivr.net"></script>
 
     <script>
-        let chat;
-
         function unlock() {
-            if (document.getElementById('pass-input').value === "4269") {
-                // Ініціалізуємо чат тільки після входу
-                const gun = Gun(['https://gun-manhattan.herokuapp.com']);
-                // Створюємо унікальну кімнату (зміни ці цифри на будь-які свої)
-                chat = gun.get('secret-room-vaniasnik-2026-unique'); 
-
+            const pass = document.getElementById('pass-code' || 'pass-input').value;
+            if (pass === "4269") {
                 document.getElementById('login-section').style.display = 'none';
                 document.getElementById('chat-section').style.display = 'block';
-
-                // Слухаємо нові повідомлення
-                chat.map().on((data) => {
-                    if (data && data.text) {
-                        renderMsg(data.text);
-                    }
-                });
-            } else { alert("Невірно!"); }
-        }
-
-        function renderMsg(text) {
-            const box = document.getElementById('chat-box');
-            // Перевірка, щоб не дублювати повідомлення
-            const id = btoa(text).substring(0, 10);
-            if (document.getElementById(id)) return;
-
-            const div = document.createElement('div');
-            div.id = id;
-            div.className = 'msg';
-            div.innerText = text;
-            box.appendChild(div);
-            box.scrollTop = box.scrollHeight;
+                alert("Успех! Теперь попробуй отправить сообщение.");
+            } else { alert("Неверно!"); }
         }
 
         function send() {
             const input = document.getElementById('msg-input');
-            if (!input.value.trim()) return;
-            chat.set({ text: input.value.trim() });
-            input.value = "";
+            const box = document.getElementById('chat-box');
+            if (input.value.trim()) {
+                const div = document.createElement('div');
+                div.innerText = "Я: " + input.value;
+                box.appendChild(div);
+                input.value = "";
+            }
         }
     </script>
 </body>
