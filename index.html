@@ -3,65 +3,52 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Elite Cloud Chat v14</title>
-    <!-- ПІДКЛЮЧЕННЯ FIREBASE БІБЛІОТЕК -->
+    <title>Elite Cloud Chat v15</title>
+    
+    <!-- 1. СПОЧАТКУ ЗАВАНТАЖУЄМО БІБЛІОТЕКИ (важливо: версія 8.10.0) -->
     <script src="https://www.gstatic.com"></script>
     <script src="https://www.gstatic.com"></script>
+
     <style>
-        :root { 
-            --bg: #080808; --panel: #121212; --primary: #00ff88; 
-            --text: #f0f0f0; --msg-bg: #1c1c1c; --border: #2a2a2a;
-        }
-        .light-theme { 
-            --bg: #f5f7fa; --panel: #ffffff; --primary: #007bff; 
-            --text: #1a1a1a; --msg-bg: #e9ecef; --border: #dee2e6;
-        }
+        :root { --bg: #080808; --panel: #121212; --primary: #00ff88; --text: #f0f0f0; --border: #2a2a2a; }
+        .light-theme { --bg: #f5f7fa; --panel: #ffffff; --primary: #007bff; --text: #1a1a1a; --border: #dee2e6; }
         * { box-sizing: border-box; transition: 0.2s; }
-        body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', Roboto, sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; padding: 15px; }
-        .wrapper { width: 100%; max-width: 600px; }
-        .card { background: var(--panel); border-radius: 24px; border: 1px solid var(--border); overflow: hidden; box-shadow: 0 10px 40px rgba(0,0,0,0.4); }
-        #chat-window { height: 550px; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 15px; background: rgba(0,0,0,0.03); }
-        .message { position: relative; padding: 12px 16px; border-radius: 18px; background: var(--msg-bg); border-left: 4px solid var(--primary); max-width: 85%; align-self: flex-start; animation: pop 0.3s ease; }
-        @keyframes pop { from { opacity: 0; transform: scale(0.95); } }
-        .msg-info { display: flex; align-items: center; gap: 10px; margin-bottom: 5px; }
-        .msg-user { font-weight: bold; font-size: 14px; }
-        .msg-date { opacity: 0.4; font-size: 11px; }
-        .msg-actions { position: absolute; right: 5px; top: -15px; display: none; gap: 5px; background: var(--panel); padding: 4px; border-radius: 10px; border: 1px solid var(--border); }
-        .message:hover .msg-actions { display: flex; }
-        .tool-btn { background: none; border: none; cursor: pointer; font-size: 16px; padding: 2px; }
-        .media { max-width: 100%; border-radius: 12px; margin-top: 10px; display: block; }
-        .input-area { display: flex; gap: 10px; padding: 20px; border-top: 1px solid var(--border); }
-        input { width: 100%; padding: 14px; border-radius: 12px; border: 1px solid var(--border); background: rgba(0,0,0,0.2); color: inherit; outline: none; }
-        .btn-main { padding: 10px 20px; border-radius: 12px; border: none; background: var(--primary); color: #000; font-weight: bold; cursor: pointer; }
-        ::-webkit-scrollbar { width: 4px; }
-        ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
+        body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; padding: 15px; }
+        .card { background: var(--panel); border-radius: 24px; border: 1px solid var(--border); width: 100%; max-width: 600px; overflow: hidden; box-shadow: 0 10px 40px rgba(0,0,0,0.5); }
+        #chat-window { height: 500px; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 12px; background: rgba(0,0,0,0.02); }
+        .message { position: relative; padding: 12px 16px; border-radius: 18px; background: #1c1c1c; border-left: 4px solid var(--primary); max-width: 85%; align-self: flex-start; }
+        .input-area { display: flex; gap: 10px; padding: 15px; border-top: 1px solid var(--border); }
+        input { width: 100%; padding: 12px; border-radius: 12px; border: 1px solid var(--border); background: rgba(0,0,0,0.2); color: inherit; outline: none; }
+        .btn { background: var(--primary); border: none; border-radius: 12px; padding: 12px 20px; cursor: pointer; font-weight: bold; color: #000; }
+        .msg-info { font-size: 12px; margin-bottom: 4px; font-weight: bold; }
     </style>
 </head>
 <body>
 
-    <div class="wrapper">
-        <div id="login-section" class="card" style="max-width: 380px; margin: 0 auto; padding: 30px; text-align: center;">
-            <h2>🔐 CLOUD LOGIN</h2>
-            <input type="text" id="nick" placeholder="Ваш нікнейм">
-            <input type="password" id="pass" placeholder="Пароль">
-            <button class="btn-main" style="width: 100%; margin-top: 15px;" onclick="login()">УВІЙТИ</button>
-        </div>
+<div id="login-section" class="card" style="max-width:350px; padding:30px; text-align:center;">
+    <h2>🔐 CLOUD LOGIN</h2>
+    <input type="text" id="nick" placeholder="Нікнейм">
+    <input type="password" id="pass" placeholder="Пароль">
+    <button class="btn" style="width:100%; margin-top:15px;" onclick="login()">УВІЙТИ</button>
+</div>
 
-        <div id="chat-section" style="display: none;">
-            <button class="btn-main" style="width: 100%; margin-bottom: 10px; background: var(--panel); color: var(--text); border: 1px solid var(--border);" onclick="document.body.classList.toggle('light-theme')">🌓 ТЕМА</button>
-            <div class="card">
-                <div id="chat-window"></div>
-                <div class="input-area">
-                    <label style="cursor:pointer; font-size:24px;">📎<input type="file" id="file-input" style="display:none" onchange="uploadFile(this)"></label>
-                    <input type="text" id="msg-input" onkeyup="if(event.key==='Enter') sendMessage()">
-                    <button class="btn-main" onclick="sendMessage()">🚀</button>
-                </div>
-            </div>
+<div id="chat-section" style="display: none; width:100%; max-width:600px;">
+    <button onclick="document.body.classList.toggle('light-theme')" style="width:100%; margin-bottom:10px; padding:8px; border-radius:12px; cursor:pointer;">🌓 ТЕМА</button>
+    <div class="card">
+        <div id="chat-window"></div>
+        <div class="input-area">
+            <input type="text" id="msg-input" placeholder="Напишіть..." onkeyup="if(event.key==='Enter') sendMessage()">
+            <button class="btn" onclick="sendMessage()">🚀</button>
         </div>
     </div>
+</div>
 
 <script>
-    // ТВОЯ КОНФІГУРАЦІЯ З FIREBASE (дані з твого скриншота)
+    // 2. ОГОЛОШУЄМО ЗМІННІ НА САМОМУ ПОЧАТКУ
+    let myUser = "";
+    let database;
+
+    // ТВОЯ КОНФІГУРАЦІЯ (дані з твоїх скриншотів)
     const firebaseConfig = {
         apiKey: "AIzaSyD03EYUjSS3zTbHgcZugOWoMPhnhMMyAnM",
         authDomain: "mysecretchat-aed68.firebaseapp.com",
@@ -69,13 +56,17 @@
         projectId: "mysecretchat-aed68",
         storageBucket: "mysecretchat-aed68.firebasestorage.app",
         messagingSenderId: "1004541515416",
-        appId: "1:1004541515416:web:7136a6692bd119f12fe2ed",
-        measurementId: "G-9PJ3TQRMTZ"
+        appId: "1:1004541515416:web:7136a6692bd119f12fe2ed"
     };
 
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.database();
-    let myUser = "";
+    // 3. ІНІЦІАЛІЗАЦІЯ (з маленької літери firebase!)
+    try {
+        firebase.initializeApp(firebaseConfig);
+        database = firebase.database();
+        console.log("Firebase підключено успішно!");
+    } catch (e) {
+        console.error("Помилка ініціалізації Firebase:", e);
+    }
 
     function login() {
         const p = document.getElementById('pass').value;
@@ -85,88 +76,41 @@
             document.getElementById('login-section').style.display = 'none';
             document.getElementById('chat-section').style.display = 'block';
             startListening();
-        } else alert("Помилка!");
+        } else {
+            alert("Невірний код або нік!");
+        }
     }
 
     function sendMessage() {
         const inp = document.getElementById('msg-input');
-        if (!inp.value.trim()) return;
-        
-        db.ref('messages').push({
+        if (!inp.value.trim() || !myUser) return;
+
+        database.ref('messages').push({
             u: myUser,
             txt: inp.value,
-            t: new Date().toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'}),
-            f: null, ft: null, fn: null,
-            r: {}
+            t: new Date().toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'})
         });
-        
+
         inp.value = "";
         inp.focus();
     }
 
     function startListening() {
-        db.ref('messages').limitToLast(50).on('value', (snapshot) => {
+        database.ref('messages').limitToLast(50).on('value', (snapshot) => {
             const win = document.getElementById('chat-window');
             win.innerHTML = '';
             snapshot.forEach((child) => {
                 const m = child.val();
-                const id = child.key;
                 const hue = [...m.u].reduce((a,c)=>c.charCodeAt(0)+(a<<5)-a,0)%360;
-                
                 const div = document.createElement('div');
                 div.className = 'message';
                 div.style.borderLeftColor = `hsl(${hue}, 70%, 60%)`;
-                
-                let media = m.f ? `<img src="${m.f}" class="media"><br><a href="${m.f}" download="${m.fn}" style="color:var(--primary); font-size:11px;">📥 Скачати</a>` : "";
-
-                div.innerHTML = `
-                    <div class="msg-actions">
-                        <button class="tool-btn" onclick="react('${id}', '🔥')">🔥</button>
-                        <button class="tool-btn" onclick="react('${id}', '👎')">👎</button>
-                        <button class="tool-btn" onclick="edit('${id}', '${m.txt}')">✏️</button>
-                        <button class="tool-btn" onclick="del('${id}')">🗑️</button>
-                    </div>
-                    <div class="msg-info">
-                        <b style="color:hsl(${hue}, 70%, 60%)">${m.u}</b>
-                        <span class="msg-date">${m.t}</span>
-                    </div>
-                    <div style="word-break: break-word;">${m.txt.replace(/@(\w+)/g, '<b style="color:var(--primary)">@$1</b>')}</div>
-                    ${media}
-                    <div style="margin-top:8px; display:flex; gap:5px;">
-                        ${Object.entries(m.r || {}).filter(([_,c])=>c>0).map(([e,c])=>`<span style="font-size:12px;background:rgba(0,0,0,0.1);padding:2px 6px;border-radius:8px">${e}</span>`).join('')}
-                    </div>
-                `;
+                div.innerHTML = `<div class="msg-info" style="color:hsl(${hue}, 70%, 60%)">${m.u} <small style="opacity:0.4">${m.t}</small></div><div>${m.txt}</div>`;
                 win.appendChild(div);
             });
             win.scrollTop = win.scrollHeight;
         });
     }
-
-    function uploadFile(el) {
-        const file = el.files[0];
-        if (!file || file.size > 1024 * 1024) return alert("Макс 1MB");
-        const reader = new FileReader();
-        reader.onload = (e) => {
-            db.ref('messages').push({
-                u: myUser, txt: "📎 Надіслав файл", t: new Date().toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'}),
-                f: e.target.result, ft: file.type, fn: file.name
-            });
-        };
-        reader.readAsDataURL(file);
-        el.value = "";
-    }
-
-    function react(id, emoji) {
-        const ref = db.ref(`messages/${id}/r/${emoji}`);
-        ref.once('value', (s) => ref.set(s.val() ? 0 : 1));
-    }
-
-    function edit(id, old) {
-        const nt = prompt("Змінити:", old);
-        if (nt) db.ref(`messages/${id}`).update({ txt: nt + " (ред.)" });
-    }
-
-    function del(id) { if(confirm("Видалити?")) db.ref(`messages/${id}`).remove(); }
 </script>
 </body>
 </html>
