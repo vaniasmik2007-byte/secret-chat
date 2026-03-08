@@ -3,15 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Elite Cloud Chat v17</title>
+    <title>Elite Cloud Chat v18</title>
     
-    <!-- БІБЛІОТЕКИ FIREBASE -->
+    <!-- ПОДКЛЮЧАЕМ БИБЛИОТЕКИ (v8.10.0) -->
     <script src="https://www.gstatic.com"></script>
     <script src="https://www.gstatic.com"></script>
 
     <style>
         :root { --bg: #080808; --panel: #121212; --primary: #00ff88; --text: #f0f0f0; --border: #2a2a2a; }
-        .light-theme { --bg: #f5f7fa; --panel: #ffffff; --primary: #007bff; --text: #1a1a1a; --border: #dee2e6; }
         * { box-sizing: border-box; }
         body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; padding: 15px; }
         .card { background: var(--panel); border-radius: 24px; border: 1px solid var(--border); width: 100%; max-width: 600px; overflow: hidden; box-shadow: 0 10px 40px rgba(0,0,0,0.5); }
@@ -20,7 +19,7 @@
         .input-area { display: flex; gap: 10px; padding: 15px; border-top: 1px solid var(--border); }
         input { width: 100%; padding: 12px; border-radius: 12px; border: 1px solid var(--border); background: rgba(0,0,0,0.2); color: inherit; outline: none; }
         .btn { background: var(--primary); border: none; border-radius: 12px; padding: 12px 20px; cursor: pointer; font-weight: bold; color: #000; }
-        #status { font-size: 10px; text-align: center; opacity: 0.5; margin-top: 5px; }
+        #status-info { font-size: 10px; text-align: center; padding: 5px; opacity: 0.5; }
     </style>
 </head>
 <body>
@@ -33,20 +32,22 @@
 </div>
 
 <div id="chat-section" style="display: none; width:100%; max-width:600px;">
-    <div id="status">Підключення...</div>
+    <div id="status-info">Спроба підключення до бази...</div>
     <div class="card">
         <div id="chat-window"></div>
         <div class="input-area">
-            <input type="text" id="msg-input" onkeyup="if(event.key==='Enter') sendMessage()">
+            <input type="text" id="msg-input" placeholder="Напишіть щось..." onkeyup="if(event.key==='Enter') sendMessage()">
             <button class="btn" onclick="sendMessage()">🚀</button>
         </div>
     </div>
 </div>
 
 <script>
+    // Объявляем переменные сразу
     var myUser = "";
     var database;
 
+    // ТВОЙ КОНФИГ ИЗ СКРИНШОТА
     var firebaseConfig = {
         apiKey: "AIzaSyD03EYUjSS3zTbHgcZugOWoMPhnhMMyAnM",
         authDomain: "mysecretchat-aed68.firebaseapp.com",
@@ -57,12 +58,16 @@
         appId: "1:1004541515416:web:7136a6692bd119f12fe2ed"
     };
 
-    // Ініціалізація з явною вказівкою бази
-    try {
-        firebase.initializeApp(firebaseConfig);
-        database = firebase.database();
-        console.log("Firebase OK!");
-    } catch (e) { console.error(e); }
+    // Инициализация (СТРОГО с маленькой буквы firebase!)
+    window.onload = function() {
+        if (typeof firebase !== 'undefined') {
+            firebase.initializeApp(firebaseConfig);
+            database = firebase.database();
+            console.log("Firebase Connected!");
+        } else {
+            document.body.innerHTML = "<h1 style='color:white; text-align:center'>Помилка: Firebase не завантажився. Перевір підключення!</h1>";
+        }
+    };
 
     function login() {
         var p = document.getElementById('pass').value;
@@ -71,31 +76,31 @@
             myUser = n;
             document.getElementById('login-section').style.display = 'none';
             document.getElementById('chat-section').style.display = 'block';
-            document.getElementById('status').innerText = "В мережі (" + myUser + ")";
+            document.getElementById('status-info').innerText = "В мережі: " + myUser;
             startListening();
-        } else { alert("Код 4269!"); }
+        } else { alert("Введіть нік та код 4269!"); }
     }
 
     function sendMessage() {
         var inp = document.getElementById('msg-input');
-        var val = inp.value.trim();
-        if (!val) return;
+        var txt = inp.value.trim();
+        if (!txt || !database) return;
 
-        // Пряма відправка в базу
+        // Отправка в Firebase
         database.ref('messages').push({
             u: myUser,
-            txt: val,
+            txt: txt,
             t: new Date().toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'})
-        }).then(() => {
-            console.log("Відправлено!");
-            inp.value = ""; // Тепер точно очиститься
+        }).then(function() {
+            inp.value = ""; // Очищаем поле только после успешной отправки
             inp.focus();
-        }).catch((err) => {
-            alert("Помилка відправки: " + err.message);
+        }).catch(function(err) {
+            alert("Помилка бази: " + err.message);
         });
     }
 
     function startListening() {
+        if (!database) return;
         database.ref('messages').limitToLast(40).on('value', function(snap) {
             var win = document.getElementById('chat-window');
             win.innerHTML = '';
@@ -105,7 +110,7 @@
                 var div = document.createElement('div');
                 div.className = 'message';
                 div.style.borderLeftColor = 'hsl('+hue+', 70%, 60%)';
-                div.innerHTML = '<div style="font-size:12px; font-weight:bold; color:hsl('+hue+',70%,60%)">'+m.u+' <small style="opacity:0.4">'+m.t+'</small></div><div>'+m.txt+'</div>';
+                div.innerHTML = '<div style="font-size:12px; font-weight:bold; color:hsl('+hue+',70%,60%)">'+m.u+' <small style="opacity:0.3">'+m.t+'</small></div><div style="word-break:break-word">'+m.txt+'</div>';
                 win.appendChild(div);
             });
             win.scrollTop = win.scrollHeight;
