@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Elite Cloud Chat v15</title>
+    <title>Elite Cloud Chat v16</title>
     
-    <!-- 1. СПОЧАТКУ ЗАВАНТАЖУЄМО БІБЛІОТЕКИ (важливо: версія 8.10.0) -->
+    <!-- ПІДКЛЮЧЕННЯ БІБЛІОТЕК (Версія 8.10.0) -->
     <script src="https://www.gstatic.com"></script>
     <script src="https://www.gstatic.com"></script>
 
@@ -37,19 +37,19 @@
     <div class="card">
         <div id="chat-window"></div>
         <div class="input-area">
-            <input type="text" id="msg-input" placeholder="Напишіть..." onkeyup="if(event.key==='Enter') sendMessage()">
+            <input type="text" id="msg-input" placeholder="Напишіть повідомлення..." onkeyup="if(event.key==='Enter') sendMessage()">
             <button class="btn" onclick="sendMessage()">🚀</button>
         </div>
     </div>
 </div>
 
 <script>
-    // 2. ОГОЛОШУЄМО ЗМІННІ НА САМОМУ ПОЧАТКУ
-    let myUser = "";
-    let database;
+    // ОГОЛОШУЄМО ЗМІННІ ЗАЗДАЛЕГІДЬ
+    var myUser = "";
+    var database;
 
-    // ТВОЯ КОНФІГУРАЦІЯ (дані з твоїх скриншотів)
-    const firebaseConfig = {
+    // ТВОЯ КОНФІГУРАЦІЯ
+    var firebaseConfig = {
         apiKey: "AIzaSyD03EYUjSS3zTbHgcZugOWoMPhnhMMyAnM",
         authDomain: "mysecretchat-aed68.firebaseapp.com",
         databaseURL: "https://mysecretchat-aed68-default-rtdb.europe-west1.firebasedatabase.app",
@@ -59,35 +59,40 @@
         appId: "1:1004541515416:web:7136a6692bd119f12fe2ed"
     };
 
-    // 3. ІНІЦІАЛІЗАЦІЯ (з маленької літери firebase!)
+    // ІНІЦІАЛІЗАЦІЯ (ВАЖЛИВО: все з маленької літери firebase!)
     try {
-        firebase.initializeApp(firebaseConfig);
-        database = firebase.database();
-        console.log("Firebase підключено успішно!");
+        if (typeof firebase !== 'undefined') {
+            firebase.initializeApp(firebaseConfig);
+            database = firebase.database();
+            console.log("Firebase успішно ініціалізовано!");
+        } else {
+            alert("Помилка: Бібліотека Firebase не завантажилася. Перевір інтернет!");
+        }
     } catch (e) {
-        console.error("Помилка ініціалізації Firebase:", e);
+        console.error("Помилка:", e);
     }
 
     function login() {
-        const p = document.getElementById('pass').value;
-        const n = document.getElementById('nick').value.trim();
+        var p = document.getElementById('pass').value;
+        var n = document.getElementById('nick').value.trim();
         if (p === "4269" && n) {
             myUser = n;
             document.getElementById('login-section').style.display = 'none';
             document.getElementById('chat-section').style.display = 'block';
             startListening();
         } else {
-            alert("Невірний код або нік!");
+            alert("Введіть нік та вірний код!");
         }
     }
 
     function sendMessage() {
-        const inp = document.getElementById('msg-input');
-        if (!inp.value.trim() || !myUser) return;
+        var inp = document.getElementById('msg-input');
+        var val = inp.value.trim();
+        if (!val || !database) return;
 
         database.ref('messages').push({
             u: myUser,
-            txt: inp.value,
+            txt: val,
             t: new Date().toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'})
         });
 
@@ -96,16 +101,17 @@
     }
 
     function startListening() {
-        database.ref('messages').limitToLast(50).on('value', (snapshot) => {
-            const win = document.getElementById('chat-window');
+        if (!database) return;
+        database.ref('messages').limitToLast(50).on('value', function(snapshot) {
+            var win = document.getElementById('chat-window');
             win.innerHTML = '';
-            snapshot.forEach((child) => {
-                const m = child.val();
-                const hue = [...m.u].reduce((a,c)=>c.charCodeAt(0)+(a<<5)-a,0)%360;
-                const div = document.createElement('div');
+            snapshot.forEach(function(child) {
+                var m = child.val();
+                var hue = [...m.u].reduce((a,c)=>c.charCodeAt(0)+(a<<5)-a,0)%360;
+                var div = document.createElement('div');
                 div.className = 'message';
-                div.style.borderLeftColor = `hsl(${hue}, 70%, 60%)`;
-                div.innerHTML = `<div class="msg-info" style="color:hsl(${hue}, 70%, 60%)">${m.u} <small style="opacity:0.4">${m.t}</small></div><div>${m.txt}</div>`;
+                div.style.borderLeftColor = 'hsl(' + hue + ', 70%, 60%)';
+                div.innerHTML = '<div class="msg-info" style="color:hsl(' + hue + ', 70%, 60%)">' + m.u + ' <small style="opacity:0.4">' + m.t + '</small></div><div>' + m.txt + '</div>';
                 win.appendChild(div);
             });
             win.scrollTop = win.scrollHeight;
